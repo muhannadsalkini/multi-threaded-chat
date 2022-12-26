@@ -32,4 +32,8 @@ PROJECT DESCRIPTION
 * Clint must have a simple parity check
 * Server mus tbe multuthreaded
 * Clint must be waiting for a massage all the time
+* User must have a copy of the chat as a txt file
+* 
+
+
 
