@@ -24,3 +24,12 @@ PROJECT DESCRIPTION
 
 *.	Simple Parity check
 *.	Cyclic redundancy check
+
+
+
+========================= Must Be Done ✓ ===========================
+* Server should return a list of connected clints 
+* Clint must have a simple parity check
+* Server mus tbe multuthreaded
+* Clint must be waiting for a massage all the time
+
