@@ -105,7 +105,7 @@ void recv_msg_handler()
     }
     else
     {
-      // -1
+      printf("Handle Error!");
     }
     memset(message, 0, sizeof(message));
   }
