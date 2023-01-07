@@ -62,6 +62,27 @@ void catch_ctrl_c_and_exit(int sig)
   control_bit = 1;
 }
 
+int write_to_file(char *file_name, char *data)
+{
+  FILE *fp;
+  char file_path[100];
+  sprintf(file_path, "%s%s", "messages/", file_name);
+  fp = fopen(file_path, "a"); // "a" modu ile dosya açılır ve veriler dosyanın sonuna eklenir
+  if (fp == NULL)
+  {
+    // Dosya açılamadı, hata döndür
+    return -1;
+  }
+
+  // Dosya açıldı, verileri yaz
+  fputs(data, fp);
+  fputs("\n", fp);
+
+  // Dosyayı kapat ve başarıyla tamamlanan işlemi belirtmek için 0 döndür
+  fclose(fp);
+  return 0;
+}
+
 void send_msg()
 {
   char message[SIZE] = {};
@@ -126,37 +147,10 @@ void recv_msg()
   }
 }
 
-int write_to_file(char *file_name, char *data)
-{
-  FILE *fp;
-  char file_path[100];
-  sprintf(file_path, "%s%s", "messages/", file_name);
-  fp = fopen(file_path, "a"); // "a" modu ile dosya açılır ve veriler dosyanın sonuna eklenir
-  if (fp == NULL)
-  {
-    // Dosya açılamadı, hata döndür
-    return -1;
-  }
-
-  // Dosya açıldı, verileri yaz
-  fputs(data, fp);
-  fputs("\n", fp);
-
-  // Dosyayı kapat ve başarıyla tamamlanan işlemi belirtmek için 0 döndür
-  fclose(fp);
-  return 0;
-}
-
 int main(int argc, char **argv)
 {
-  if (argc != 2)
-  {
-    printf("Port No: %s <port>\n", argv[0]);
-    return EXIT_FAILURE;
-  }
-
   char *ip = "127.0.0.1";
-  int port = atoi(argv[1]);
+  int port = 1234;
 
   signal(SIGINT, catch_ctrl_c_and_exit);
 
@@ -198,8 +192,7 @@ int main(int argc, char **argv)
   {
     printf("ERROR: pthread\n");
     return EXIT_FAILURE;
-  }
-  */
+  }*/
 
   pthread_t recved_thread;
   pthread_create(&recved_thread, NULL, (void *)recv_msg, NULL);
@@ -208,12 +201,11 @@ int main(int argc, char **argv)
   {
     printf("ERROR: pthread\n");
     return EXIT_FAILURE;
-  }
-  */
+  }*/
 
   while (1)
   {
-    if (control_bit)
+    if (control_bit == 1)
     {
       printf("\nExited!\n");
       break;
@@ -222,5 +214,5 @@ int main(int argc, char **argv)
 
   close(sockfd);
 
-  return EXIT_SUCCESS;
+  return 0;
 }

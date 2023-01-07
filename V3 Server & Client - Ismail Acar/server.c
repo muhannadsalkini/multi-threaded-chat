@@ -18,17 +18,13 @@ To run the server side you need to open a new terminal and type: ./server 4444
 #include <sys/types.h>
 #include <signal.h>
 
-#define FORMAT "-> %s hello"
+#define FORMAT "-> %s selam"
 #define MAX_CLIENTS 20
 #define BUFFER_SIZE 1024
 
-pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 static _Atomic unsigned int total_clients = 0;
 static int uid = 10;
 char global_name[32];
-
-client_t *clients[MAX_CLIENTS];
-
 /* Client structure */
 typedef struct
 {
@@ -37,6 +33,10 @@ typedef struct
 	int uid;
 	char name[32];
 } client_t;
+
+client_t *clients[MAX_CLIENTS];
+
+pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 
 void str_overwrite_stdout()
 {
@@ -58,7 +58,7 @@ void str_trim_lf(char *arr, int length)
 	}
 }
 
-void add_client(struct sockaddr_in addr)
+void CONN_add_client(struct sockaddr_in addr)
 {
 	// CONN
 	printf("%d.%d.%d.%d",
@@ -69,7 +69,7 @@ void add_client(struct sockaddr_in addr)
 }
 
 /* Add clients to queue */
-void add_client_que(client_t *cl)
+void CONN_add_client_que(client_t *cl)
 {
 	// CONN
 	pthread_mutex_lock(&clients_mutex);
@@ -87,7 +87,7 @@ void add_client_que(client_t *cl)
 }
 
 /* Send message to all clients except sender */
-void send_join_message(char *s, int uid)
+void CONN_send_join_message(char *s, int uid)
 {
 	// CONN
 	pthread_mutex_lock(&clients_mutex);
@@ -111,13 +111,13 @@ void send_join_message(char *s, int uid)
 }
 
 // Probt the active clients list here
-void print_clients_list(char *s)
+void CONN_print_clients_list(char *s)
 {
 	// CONN
 	//
 }
 
-void send_message(char *s, int uid)
+void MESG_send_message(char *s, int uid)
 {
 	// MESG
 	// buraya eklenecek arg
@@ -141,7 +141,7 @@ void send_message(char *s, int uid)
 	pthread_mutex_unlock(&clients_mutex);
 }
 
-void send_message_without_error(char *s, int uid)
+void MERR_send_message_without_error(char *s, int uid)
 {
 	// MERR
 	pthread_mutex_lock(&clients_mutex);
@@ -161,7 +161,7 @@ void send_message_without_error(char *s, int uid)
 }
 
 /* Remove clients from queue */
-void client_remove_que(int uid)
+void GONE_client_remove_que(int uid)
 {
 	// GONE
 	pthread_mutex_lock(&clients_mutex);
@@ -245,7 +245,7 @@ void *service_client(void *arg)
 		strcpy(cli->name, name);
 		sprintf(buff_out, "%s has joined\n", cli->name);
 		printf("%s", buff_out);
-		send_join_message(buff_out, cli->uid);
+		CONN_send_join_message(buff_out, cli->uid);
 	}
 
 	bzero(buff_out, BUFFER_SIZE);
@@ -272,7 +272,7 @@ void *service_client(void *arg)
 				{
 					char result[3000]; // 3000 özel bi sayı değil rastgele verildi.
 					sprintf(result, "%s %s\n", cli->name, buff_out);
-					send_message(result, a);
+					MESG_send_message(result, a);
 					int result2 = write_to_file(global_name, result);
 					if (result2 == 0)
 					{
@@ -292,7 +292,7 @@ void *service_client(void *arg)
 		{
 			sprintf(buff_out, "%s has left\n", cli->name);
 			printf("%s", buff_out);
-			send_join_message(buff_out, cli->uid);
+			CONN_send_join_message(buff_out, cli->uid);
 			leave_flag = 1;
 		}
 		else
@@ -306,7 +306,7 @@ void *service_client(void *arg)
 
 	/* Delete client from queue and yield thread */
 	close(cli->sockfd);
-	client_remove_que(cli->uid);
+	GONE_client_remove_que(cli->uid);
 	free(cli);
 	total_clients--;
 	pthread_detach(pthread_self());
@@ -316,14 +316,8 @@ void *service_client(void *arg)
 
 int main(int argc, char **argv)
 {
-	if (argc != 2)
-	{
-		printf("Usage: %s <port>\n", argv[0]);
-		return EXIT_FAILURE;
-	}
-
 	char *ip = "127.0.0.1";
-	int port = atoi(argv[1]);
+	int port = 1234;
 	int option = 1;
 	int listenfd = 0, connfd = 0;
 	struct sockaddr_in serv_addr;
@@ -370,7 +364,7 @@ int main(int argc, char **argv)
 		if ((total_clients + 1) == MAX_CLIENTS)
 		{
 			printf("Max clients reached. Rejected: ");
-			add_client(cli_addr);
+			CONN_add_client(cli_addr);
 			printf(":%d\n", cli_addr.sin_port);
 			close(connfd);
 			continue;
@@ -383,7 +377,7 @@ int main(int argc, char **argv)
 		cli->uid = uid++;
 
 		/* Add client to the queue and fork thread */
-		add_client_que(cli);
+		CONN_add_client_que(cli);
 		pthread_create(&tid, NULL, &service_client, (void *)cli);
 
 		/* Reduce CPU usage */
