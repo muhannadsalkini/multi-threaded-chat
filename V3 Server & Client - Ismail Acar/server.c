@@ -44,6 +44,7 @@ void str_overwrite_stdout()
 	fflush(stdout);
 }
 
+// !! Remove this if not effecting the code
 void str_trim_lf(char *arr, int length)
 {
 	int i;
@@ -59,6 +60,7 @@ void str_trim_lf(char *arr, int length)
 
 void add_client(struct sockaddr_in addr)
 {
+	// CONN
 	printf("%d.%d.%d.%d",
 		   addr.sin_addr.s_addr & 0xff,
 		   (addr.sin_addr.s_addr & 0xff00) >> 8,
@@ -69,6 +71,7 @@ void add_client(struct sockaddr_in addr)
 /* Add clients to queue */
 void add_client_que(client_t *cl)
 {
+	// CONN
 	pthread_mutex_lock(&clients_mutex);
 
 	for (int i = 0; i < MAX_CLIENTS; ++i)
@@ -83,29 +86,10 @@ void add_client_que(client_t *cl)
 	pthread_mutex_unlock(&clients_mutex);
 }
 
-/* Remove clients from queue */
-void client_remove_que(int uid)
-{
-	pthread_mutex_lock(&clients_mutex);
-
-	for (int i = 0; i < MAX_CLIENTS; ++i)
-	{
-		if (clients[i])
-		{
-			if (clients[i]->uid == uid)
-			{
-				clients[i] = NULL;
-				break;
-			}
-		}
-	}
-
-	pthread_mutex_unlock(&clients_mutex);
-}
-
 /* Send message to all clients except sender */
 void send_join_message(char *s, int uid)
 {
+	// CONN
 	pthread_mutex_lock(&clients_mutex);
 
 	for (int i = 0; i < MAX_CLIENTS; ++i)
@@ -126,8 +110,17 @@ void send_join_message(char *s, int uid)
 	pthread_mutex_unlock(&clients_mutex);
 }
 
+// Probt the active clients list here
+void print_clients_list(char *s)
+{
+	// CONN
+	//
+}
+
 void send_message(char *s, int uid)
-{ // buraya eklenecek arg
+{
+	// MESG
+	// buraya eklenecek arg
 	pthread_mutex_lock(&clients_mutex);
 
 	for (int i = 0; i < MAX_CLIENTS; ++i)
@@ -141,6 +134,46 @@ void send_message(char *s, int uid)
 					perror("ERROR: write to descriptor failed");
 					break;
 				}
+			}
+		}
+	}
+
+	pthread_mutex_unlock(&clients_mutex);
+}
+
+void send_message_without_error(char *s, int uid)
+{
+	// MERR
+	pthread_mutex_lock(&clients_mutex);
+
+	for (int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		if (clients[i])
+		{
+			if (clients[i]->uid == uid)
+			{
+				write(clients[i]->sockfd, s, strlen(s));
+			}
+		}
+	}
+
+	pthread_mutex_unlock(&clients_mutex);
+}
+
+/* Remove clients from queue */
+void client_remove_que(int uid)
+{
+	// GONE
+	pthread_mutex_lock(&clients_mutex);
+
+	for (int i = 0; i < MAX_CLIENTS; ++i)
+	{
+		if (clients[i])
+		{
+			if (clients[i]->uid == uid)
+			{
+				clients[i] = NULL;
+				break;
 			}
 		}
 	}

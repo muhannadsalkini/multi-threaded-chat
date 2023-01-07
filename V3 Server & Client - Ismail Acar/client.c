@@ -18,7 +18,7 @@ To run a new client you need to open a new terminal and type: ./client 4444
 #define SIZE 1024
 
 // Global variables
-volatile sig_atomic_t flag = 0;
+volatile sig_atomic_t control_bit = 0;
 int sockfd = 0;
 char name[32];
 
@@ -28,6 +28,7 @@ void str_overwrite_stdout()
   fflush(stdout);
 }
 
+// !!Remove this if not effecting the code
 void str_trim_lf(char *arr, int length)
 {
   int i;
@@ -41,12 +42,27 @@ void str_trim_lf(char *arr, int length)
   }
 }
 
-void catch_ctrl_c_and_exit(int sig)
+void convert_to_asci(char *arr, int length)
 {
-  flag = 1;
+  //
 }
 
-void send_msg_handler()
+void parity_check(char *arr, int length)
+{
+  //
+}
+
+void cyclic_redundancy_check(char *arr, int length)
+{
+  //
+}
+
+void catch_ctrl_c_and_exit(int sig)
+{
+  control_bit = 1;
+}
+
+void send_msg()
 {
   char message[SIZE] = {};
   char buffer[SIZE + 32] = {};
@@ -73,7 +89,7 @@ void send_msg_handler()
       {
         printf("Error writing to file.\n");
       }
-      //
+
       sprintf(buffer, "%s\n", message);
       send(sockfd, buffer, strlen(buffer), 0);
     }
@@ -84,7 +100,7 @@ void send_msg_handler()
   catch_ctrl_c_and_exit(2);
 }
 
-void recv_msg_handler()
+void recv_msg()
 {
   char message[SIZE] = {};
   while (1)
@@ -96,7 +112,6 @@ void recv_msg_handler()
       str_trim_lf(message, 3000); // hata verdirtme ihtimali olan bir satır..
       printf("%s\n", message);
 
-      //
       str_overwrite_stdout();
     }
     else if (receive == 0)
@@ -174,25 +189,31 @@ int main(int argc, char **argv)
   // Send name
   send(sockfd, name, 32, 0);
 
-  printf("=== WELCOME TO THE CHATROOM ===\n");
+  printf("Entered to The Chat Room.\n");
 
-  pthread_t send_msg_thread;
-  if (pthread_create(&send_msg_thread, NULL, (void *)send_msg_handler, NULL) != 0)
+  pthread_t sent_thread;
+  pthread_create(&sent_thread, NULL, (void *)send_msg, NULL);
+  /* OLD CODE. REMOVE BEFROE SEND THE CODE!!
+  if (pthread_create(&sent_thread, NULL, (void *)send_msg, NULL) != 0)
   {
     printf("ERROR: pthread\n");
     return EXIT_FAILURE;
   }
+  */
 
-  pthread_t recv_msg_thread;
-  if (pthread_create(&recv_msg_thread, NULL, (void *)recv_msg_handler, NULL) != 0)
+  pthread_t recved_thread;
+  pthread_create(&recved_thread, NULL, (void *)recv_msg, NULL);
+  /* OLD CODE. REMOVE BEFROE SEND THE CODE!!
+  if (pthread_create(&recved_thread, NULL, (void *)recv_msg, NULL) != 0)
   {
     printf("ERROR: pthread\n");
     return EXIT_FAILURE;
   }
+  */
 
   while (1)
   {
-    if (flag)
+    if (control_bit)
     {
       printf("\nExited!\n");
       break;
