@@ -1,19 +1,19 @@
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <stdio.h>
+#include <errno.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <errno.h>
 #include <string.h>
 #include <pthread.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
 #include <signal.h>
 
-#define MAX_CLIENTS 100
-#define BUFFER_SZ 2048
+#define MAX_CLIENTS 20
+#define BUFFER_SIZE 2048
 
-static _Atomic unsigned int cli_count = 0;
+static _Atomic unsigned int Total_clints = 0;
 static int uid = 10;
 
 /* Client structure */
@@ -23,9 +23,9 @@ typedef struct
     int sockfd;
     int uid;
     char name[32];
-} client_t;
+} clientt;
 
-client_t *clients[MAX_CLIENTS];
+clientt *clients[MAX_CLIENTS];
 
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 
@@ -58,7 +58,7 @@ void print_client_addr(struct sockaddr_in addr)
 }
 
 /* Add clients to queue */
-void queue_add(client_t *cl)
+void queue_add(clientt *cl)
 {
     pthread_mutex_lock(&clients_mutex);
 
@@ -120,12 +120,12 @@ void send_message(char *s, int uid)
 /* Handle all communication with the client */
 void *handle_client(void *arg)
 {
-    char buff_out[BUFFER_SZ];
+    char buff_out[BUFFER_SIZE];
     char name[32];
     int leave_flag = 0;
 
-    cli_count++;
-    client_t *cli = (client_t *)arg;
+    Total_clints++;
+    clientt *cli = (clientt *)arg;
 
     // Name
     if (recv(cli->sockfd, name, 32, 0) <= 0 || strlen(name) < 2 || strlen(name) >= 32 - 1)
@@ -136,12 +136,12 @@ void *handle_client(void *arg)
     else
     {
         strcpy(cli->name, name);
-        sprintf(buff_out, "%s has joined\n", cli->name);
+        sprintf(buff_out, "%s joined\n", cli->name);
         printf("%s", buff_out);
         send_message(buff_out, cli->uid);
     }
 
-    bzero(buff_out, BUFFER_SZ);
+    bzero(buff_out, BUFFER_SIZE);
 
     while (1)
     {
@@ -150,7 +150,7 @@ void *handle_client(void *arg)
             break;
         }
 
-        int receive = recv(cli->sockfd, buff_out, BUFFER_SZ, 0);
+        int receive = recv(cli->sockfd, buff_out, BUFFER_SIZE, 0);
         if (receive > 0)
         {
             if (strlen(buff_out) > 0)
@@ -163,7 +163,7 @@ void *handle_client(void *arg)
         }
         else if (receive == 0 || strcmp(buff_out, "exit") == 0)
         {
-            sprintf(buff_out, "%s has left\n", cli->name);
+            sprintf(buff_out, "%s left\n", cli->name);
             printf("%s", buff_out);
             send_message(buff_out, cli->uid);
             leave_flag = 1;
@@ -174,14 +174,14 @@ void *handle_client(void *arg)
             leave_flag = 1;
         }
 
-        bzero(buff_out, BUFFER_SZ);
+        bzero(buff_out, BUFFER_SIZE);
     }
 
     /* Delete client from queue and yield thread */
     close(cli->sockfd);
     queue_remove(cli->uid);
     free(cli);
-    cli_count--;
+    Total_clints--;
     pthread_detach(pthread_self());
 
     return NULL;
@@ -240,7 +240,7 @@ int main(int argc, char **argv)
         connfd = accept(listenfd, (struct sockaddr *)&cli_addr, &clilen);
 
         /* Check if max clients is reached */
-        if ((cli_count + 1) == MAX_CLIENTS)
+        if ((Total_clints + 1) == MAX_CLIENTS)
         {
             printf("Max clients reached. Rejected: ");
             print_client_addr(cli_addr);
@@ -250,7 +250,7 @@ int main(int argc, char **argv)
         }
 
         /* Client settings */
-        client_t *cli = (client_t *)malloc(sizeof(client_t));
+        clientt *cli = (clientt *)malloc(sizeof(clientt));
         cli->address = cli_addr;
         cli->sockfd = connfd;
         cli->uid = uid++;
