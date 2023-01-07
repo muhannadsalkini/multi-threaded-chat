@@ -1,8 +1,12 @@
 /*
-To run a new client you need to open a new terminal and type: ./client 4444
-
-
+Group 10:
+1910205563 - MUHANNAD SALKINI
+2010205590 - MOHAMAD ZUBI
+1810205559 - Ousman Abdoulaye Ahmat
+1810205053 - Ismail Acar
 */
+
+// To run a new client you need to open a new terminal and type: ./client
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -16,19 +20,23 @@ To run a new client you need to open a new terminal and type: ./client 4444
 #include <signal.h>
 
 #define SIZE 1024
+#define MAX_BINARY_LEN 9               // 8 bits per character + 1 for the null terminator
+#define POLYNOMIAL 0b10001000000100001 // CRC-16-CCITT polynomial
+#define POLYNOMIAL_LEN 17              // Length of the polynomial, in bits
 
 // Global variables
-volatile sig_atomic_t control_bit = 0;
-int sockfd = 0;
-char name[32];
+volatile sig_atomic_t control_bit = 0; // Atomic variable for signaling
+int sockfd = 0;                        // Socket descriptor
+char name[32];                         // User's name
 
+// Function to overwrite the current line in stdout with the "> " prompt
 void str_overwrite_stdout()
 {
   printf("%s", "> ");
   fflush(stdout);
 }
 
-// !!Remove this if not effecting the code
+// Trims the '\n' character from a string
 void str_trim_lf(char *arr, int length)
 {
   int i;
@@ -42,52 +50,173 @@ void str_trim_lf(char *arr, int length)
   }
 }
 
-void convert_to_asci(char *arr, int length)
+// Converts a string to its binary ASCII representation
+void convert_to_asci(char *str, int length)
 {
-  //
+  // Check for proper usage
+  if (argc != 2)
+  {
+    fprintf(stderr, "Usage: %s <string>\n", argv[0]);
+    return 1;
+  }
+
+  // Get input string
+  // char *str = argv[1];
+
+  // Create array of strings to store binary ASCII representation
+  char binary[strlen(str)][MAX_BINARY_LEN];
+
+  // Convert string to binary ASCII representation
+  for (int i = 0; i < strlen(str); i++)
+  {
+    char c = str[i];
+    int idx = 0;
+    for (int j = 7; j >= 0; j--)
+    {
+      binary[i][idx++] = (c >> j) & 1 ? '1' : '0';
+    }
+    binary[i][idx] = '\0';
+  }
+
+  // Print binary ASCII representation with '|' separator
+  // for (int i = 0; i < strlen(str); i++)
+  //{
+  //  printf("%s|", binary[i]);
+  //}
+
+  // return binary;
+  return 0;
 }
 
-void parity_check(char *arr, int length)
+// Applies parity check to an array of binary strings
+void parity_check(char *binary_strings, num_strings)
 {
-  //
+  // Check for proper usage
+  if (argc < 2)
+  {
+    fprintf(stderr, "Usage: %s <binary strings>\n", argv[0]);
+    return 1;
+  }
+
+  // Parse input binary strings
+  // int num_strings = argc - 1;
+  // char *binary_strings[num_strings];
+  for (int i = 0; i < num_strings; i++)
+  {
+    binary_strings[i] = argv[i + 1];
+  }
+
+  // Apply parity check to each binary string
+  for (int i = 0; i < num_strings; i++)
+  {
+    int num_ones = 0;
+    for (int j = 0; j < strlen(binary_strings[i]); j++)
+    {
+      if (binary_strings[i][j] == '1')
+      {
+        num_ones++;
+      }
+    }
+
+    // if (num_ones % 2 == 0)
+    //{
+    //   printf("%s has even parity\n", binary_strings[i]);
+    // }
+    // else
+    //{
+    //   printf("%s has odd parity\n", binary_strings[i]);
+    // }
+  }
+
+  return 0;
 }
 
-void cyclic_redundancy_check(char *arr, int length)
+// Applies cyclic redundancy check to an array of binary strings
+void cyclic_redundancy_check(char *binary_strings, num_strings)
 {
-  //
+  // Check for proper usage
+  if (argc < 2)
+  {
+    fprintf(stderr, "Usage: %s <binary strings>\n", argv[0]);
+    return 1;
+  }
+
+  // Parse input binary strings
+  int num_strings = argc - 1;
+  char *binary_strings[num_strings];
+  for (int i = 0; i < num_strings; i++)
+  {
+    binary_strings[i] = argv[i + 1];
+  }
+
+  // Apply cyclic redundancy check to each binary string
+  for (int i = 0; i < num_strings; i++)
+  {
+    char crc[POLYNOMIAL_LEN];        // Stores the calculated CRC
+    strcpy(crc, "0000000000000000"); // Initialize the CRC to all zeros
+
+    // Calculate the CRC
+    for (int j = 0; j < strlen(binary_strings[i]); j++)
+    {
+      // Shift the CRC left by 1 bit
+      for (int k = POLYNOMIAL_LEN - 1; k > 0; k--)
+      {
+        crc[k] = crc[k - 1];
+      }
+
+      // XOR the leftmost bit of the CRC with the next bit of the input string, if necessary
+      if (crc[0] == '1')
+      {
+        for (int k = 0; k < POLYNOMIAL_LEN; k++)
+        {
+          crc[k] = crc[k] == polynomial[k] ? '0' : '1';
+        }
+      }
+
+      // Shift the input string left by 1 bit
+      binary_strings[i][j] = binary_strings[i][j + 1];
+    }
+
+    // Print the calculated CRC
+    // printf("CRC for %s is %s\n", binary_strings[i], crc);
+  }
+
+  return 0;
 }
 
+// Function to catch the SIGINT signal (ctrl-c) and set the control_bit variable to 1
 void catch_ctrl_c_and_exit(int sig)
 {
   control_bit = 1;
 }
 
+// Function to write data to a file with the given file name
 int write_to_file(char *file_name, char *data)
 {
-  FILE *fp;
+  FILE *fp; // Open the file in append mode
   char file_path[100];
-  sprintf(file_path, "%s%s", "messages/", file_name);
-  fp = fopen(file_path, "a"); // "a" modu ile dosya açılır ve veriler dosyanın sonuna eklenir
+  sprintf(file_path, "%s%s", "messages/", file_name); // create the file path by concatenating
+  fp = fopen(file_path, "a");
   if (fp == NULL)
   {
-    // Dosya açılamadı, hata döndür
     return -1;
   }
 
-  // Dosya açıldı, verileri yaz
+  // Write the data to the file and add a newline character
   fputs(data, fp);
   fputs("\n", fp);
 
-  // Dosyayı kapat ve başarıyla tamamlanan işlemi belirtmek için 0 döndür
   fclose(fp);
   return 0;
 }
 
+// Function to send a message
 void send_msg()
 {
-  char message[SIZE] = {};
-  char buffer[SIZE + 32] = {};
+  char message[SIZE] = {};     // create a buffer to store the message
+  char buffer[SIZE + 32] = {}; // create a buffer to store the message along with additional
 
+  // Loop until the user types "exit"
   while (1)
   {
     str_overwrite_stdout();
@@ -111,48 +240,54 @@ void send_msg()
         printf("Error writing to file.\n");
       }
 
+      // add the message to the buffer along with additional information and send it to the server
       sprintf(buffer, "%s\n", message);
       send(sockfd, buffer, strlen(buffer), 0);
     }
 
+    // clear the buffers
     bzero(message, SIZE);
     bzero(buffer, SIZE + 32);
   }
-  catch_ctrl_c_and_exit(2);
+  catch_ctrl_c_and_exit(2); // catch the SIGINT signal (ctrl-c) and set the control_bit variable to
 }
 
+// Function to receive a message
 void recv_msg()
 {
-  char message[SIZE] = {};
+  char message[SIZE] = {}; // create a buffer to store the received message
   while (1)
   {
-    int receive = recv(sockfd, message, SIZE, 0);
+    int receive = recv(sockfd, message, SIZE, 0); // receive a message from the socket
 
+    // if the message was received successfully
     if (receive > 0)
     {
-      str_trim_lf(message, 3000); // hata verdirtme ihtimali olan bir satır..
-      printf("%s\n", message);
+      str_trim_lf(message, 3000); // remove the '\n' character from the end of
+      printf("%s\n", message);    // print the message to stdout
 
-      str_overwrite_stdout();
+      str_overwrite_stdout(); // overwrite the current line in stdout with the "> " prompt
     }
+    // if the connection was closed by the other side
     else if (receive == 0)
     {
       break;
     }
+    // if there was an error in receiving the message
     else
     {
       printf("Handle Error!");
     }
-    memset(message, 0, sizeof(message));
+    memset(message, 0, sizeof(message)); // reset the message buffer
   }
 }
 
 int main(int argc, char **argv)
 {
-  char *ip = "127.0.0.1";
+  char *ip = "127.0.0.1"; // the IP address of the server
   int port = 1234;
 
-  signal(SIGINT, catch_ctrl_c_and_exit);
+  signal(SIGINT, catch_ctrl_c_and_exit); // register signal handler for Ctrl-C
 
   printf("Enter your chat name: ");
   fgets(name, 22, stdin);
@@ -166,7 +301,7 @@ int main(int argc, char **argv)
 
   struct sockaddr_in server_addr;
 
-  /* Socket settings */
+  // Socket settings
   sockfd = socket(AF_INET, SOCK_STREAM, 0);
   server_addr.sin_family = AF_INET;
   server_addr.sin_addr.s_addr = inet_addr(ip);
@@ -186,22 +321,10 @@ int main(int argc, char **argv)
   printf("Entered to The Chat Room.\n");
 
   pthread_t sent_thread;
-  pthread_create(&sent_thread, NULL, (void *)send_msg, NULL);
-  /* OLD CODE. REMOVE BEFROE SEND THE CODE!!
-  if (pthread_create(&sent_thread, NULL, (void *)send_msg, NULL) != 0)
-  {
-    printf("ERROR: pthread\n");
-    return EXIT_FAILURE;
-  }*/
+  pthread_create(&sent_thread, NULL, (void *)send_msg, NULL); // create a new thread to send messages
 
   pthread_t recved_thread;
-  pthread_create(&recved_thread, NULL, (void *)recv_msg, NULL);
-  /* OLD CODE. REMOVE BEFROE SEND THE CODE!!
-  if (pthread_create(&recved_thread, NULL, (void *)recv_msg, NULL) != 0)
-  {
-    printf("ERROR: pthread\n");
-    return EXIT_FAILURE;
-  }*/
+  pthread_create(&recved_thread, NULL, (void *)recv_msg, NULL); // create a new thread to receive messages
 
   while (1)
   {
@@ -212,7 +335,7 @@ int main(int argc, char **argv)
     }
   }
 
-  close(sockfd);
+  close(sockfd); // close
 
   return 0;
 }

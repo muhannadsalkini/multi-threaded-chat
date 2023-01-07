@@ -1,10 +1,13 @@
 /*
-The program is runable on a machine tha have gcc installed on it.
-
-To run the server side you need to open a new terminal and type: ./server 4444
-
-
+Group 10:
+1910205563 - MUHANNAD SALKINI
+2010205590 - MOHAMAD ZUBI
+1810205559 - Ousman Abdoulaye Ahmat
+1810205053 - Ismail Acar
 */
+
+// The program is runable on a machine tha have gcc installed on it.
+// To run the server side you need to open a new terminal and type: ./server
 
 #include <stdio.h>
 #include <stdlib.h>
@@ -18,14 +21,15 @@ To run the server side you need to open a new terminal and type: ./server 4444
 #include <sys/types.h>
 #include <signal.h>
 
-#define FORMAT "-> %s selam"
+#define FORMAT "-> %s hello"
 #define MAX_CLIENTS 20
 #define BUFFER_SIZE 1024
 
-static _Atomic unsigned int total_clients = 0;
-static int uid = 10;
-char global_name[32];
-/* Client structure */
+static _Atomic unsigned int total_clients = 0; // total_clients is an atomic variable that can be modified concurrently
+static int uid = 10;						   // uid is a global variable that stores the next available client ID
+char global_name[32];						   // global_name is a global character array that stores the name of the client
+
+// client_t is a structure that stores the client's address, socket descriptor, ID, and name
 typedef struct
 {
 	struct sockaddr_in address;
@@ -34,17 +38,18 @@ typedef struct
 	char name[32];
 } client_t;
 
-client_t *clients[MAX_CLIENTS];
+client_t *clients[MAX_CLIENTS]; // clients is an array of pointers to client_t structures
 
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 
+// str_overwrite_stdout overwrites the current line in stdout with "> "
 void str_overwrite_stdout()
 {
 	printf("\r%s", "> ");
 	fflush(stdout);
 }
 
-// !! Remove this if not effecting the code
+// str_trim_lf trims the '\n' character from the end of a character array
 void str_trim_lf(char *arr, int length)
 {
 	int i;
@@ -58,6 +63,7 @@ void str_trim_lf(char *arr, int length)
 	}
 }
 
+// CONN_add_client adds a client to the clients array
 void CONN_add_client(struct sockaddr_in addr)
 {
 	// CONN
@@ -68,7 +74,7 @@ void CONN_add_client(struct sockaddr_in addr)
 		   (addr.sin_addr.s_addr & 0xff000000) >> 24);
 }
 
-/* Add clients to queue */
+// CONN_add_client_que adds a client to the clients array in a thread-safe manner using a mutex
 void CONN_add_client_que(client_t *cl)
 {
 	// CONN
@@ -82,11 +88,10 @@ void CONN_add_client_que(client_t *cl)
 			break;
 		}
 	}
-
 	pthread_mutex_unlock(&clients_mutex);
 }
 
-/* Send message to all clients except sender */
+// CONN_send_join_message sends a message to all clients except the sender
 void CONN_send_join_message(char *s, int uid)
 {
 	// CONN
@@ -110,17 +115,22 @@ void CONN_send_join_message(char *s, int uid)
 	pthread_mutex_unlock(&clients_mutex);
 }
 
-// Probt the active clients list here
-void CONN_print_clients_list(char *s)
+// CONN_print_clients_list prints the list of active clients
+void CONN_print_clients_list(struct sockaddr_in *head)
 {
 	// CONN
-	//
+	int i = 0;
+	while (head != NULL)
+	{
+		printf("%d => %d ", i, head->data);
+		head = head->next;
+	}
+	printf("\n");
 }
-
+// MESG_send_message sends a message to the specified client
 void MESG_send_message(char *s, int uid)
 {
 	// MESG
-	// buraya eklenecek arg
 	pthread_mutex_lock(&clients_mutex);
 
 	for (int i = 0; i < MAX_CLIENTS; ++i)
@@ -137,10 +147,10 @@ void MESG_send_message(char *s, int uid)
 			}
 		}
 	}
-
 	pthread_mutex_unlock(&clients_mutex);
 }
 
+// MERR_send_message_without_error sends a message to the specified client without checking for errors
 void MERR_send_message_without_error(char *s, int uid)
 {
 	// MERR
@@ -160,7 +170,7 @@ void MERR_send_message_without_error(char *s, int uid)
 	pthread_mutex_unlock(&clients_mutex);
 }
 
-/* Remove clients from queue */
+// GONE_client_remove_que removes a client from the clients array in a thread-safe manner using a mutex
 void GONE_client_remove_que(int uid)
 {
 	// GONE
@@ -181,6 +191,7 @@ void GONE_client_remove_que(int uid)
 	pthread_mutex_unlock(&clients_mutex);
 }
 
+// find_Client searches the clients array for a client with the specified name and returns the client's ID
 int find_Client(char *s)
 {
 	char output[32];
@@ -202,28 +213,26 @@ int find_Client(char *s)
 	return -1;
 }
 
+// write_to_file writes the given data to a file with the specified name
 int write_to_file(char *file_name, char *data)
 {
 	FILE *fp;
 	char file_path[100];
 	sprintf(file_path, "%s%s", "messages/", file_name);
-	fp = fopen(file_path, "a"); // "a" modu ile dosya açılır ve veriler dosyanın sonuna eklenir
+	fp = fopen(file_path, "a");
 	if (fp == NULL)
 	{
-		// Dosya açılamadı, hata döndür
 		return -1;
 	}
 	str_trim_lf(data, strlen(data));
-	// Dosya açıldı, verileri yaz
 	fputs(data, fp);
 	fputs("\n", fp);
 
-	// Dosyayı kapat ve başarıyla tamamlanan işlemi belirtmek için 0 döndür
 	fclose(fp);
 	return 0;
 }
 
-/* Handle all communication with the client */
+// service_client handles all communication with a client
 void *service_client(void *arg)
 {
 	char buff_out[BUFFER_SIZE];
@@ -270,7 +279,7 @@ void *service_client(void *arg)
 				}
 				else
 				{
-					char result[3000]; // 3000 özel bi sayı değil rastgele verildi.
+					char result[4444];
 					sprintf(result, "%s %s\n", cli->name, buff_out);
 					MESG_send_message(result, a);
 					int result2 = write_to_file(global_name, result);
@@ -304,8 +313,8 @@ void *service_client(void *arg)
 		bzero(buff_out, BUFFER_SIZE);
 	}
 
-	/* Delete client from queue and yield thread */
-	close(cli->sockfd);
+	// Delete client from queue and yield thread
+	close(cli->sockfd); // close
 	GONE_client_remove_que(cli->uid);
 	free(cli);
 	total_clients--;
@@ -324,13 +333,13 @@ int main(int argc, char **argv)
 	struct sockaddr_in cli_addr;
 	pthread_t tid;
 
-	/* Socket settings */
+	// Socket settings
 	listenfd = socket(AF_INET, SOCK_STREAM, 0);
 	serv_addr.sin_family = AF_INET;
 	serv_addr.sin_addr.s_addr = inet_addr(ip);
 	serv_addr.sin_port = htons(port);
 
-	/* Ignore pipe signals */
+	// Ignore pipe signals
 	signal(SIGPIPE, SIG_IGN);
 
 	if (setsockopt(listenfd, SOL_SOCKET, (SO_REUSEPORT | SO_REUSEADDR), (char *)&option, sizeof(option)) < 0)
@@ -339,14 +348,14 @@ int main(int argc, char **argv)
 		return EXIT_FAILURE;
 	}
 
-	/* Bind */
+	// Bind
 	if (bind(listenfd, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
 	{
 		perror("ERROR: Socket binding failed");
 		return EXIT_FAILURE;
 	}
 
-	/* Listen */
+	// Listen
 	if (listen(listenfd, 10) < 0)
 	{
 		perror("ERROR: Socket listening failed");
@@ -360,7 +369,7 @@ int main(int argc, char **argv)
 		socklen_t clilen = sizeof(cli_addr);
 		connfd = accept(listenfd, (struct sockaddr *)&cli_addr, &clilen);
 
-		/* Check if max clients is reached */
+		// Check if max clients is reached
 		if ((total_clients + 1) == MAX_CLIENTS)
 		{
 			printf("Max clients reached. Rejected: ");
@@ -370,17 +379,17 @@ int main(int argc, char **argv)
 			continue;
 		}
 
-		/* Client settings */
+		// Client settings
 		client_t *cli = (client_t *)malloc(sizeof(client_t));
 		cli->address = cli_addr;
 		cli->sockfd = connfd;
 		cli->uid = uid++;
 
-		/* Add client to the queue and fork thread */
+		// Add client to the queue and fork thread
 		CONN_add_client_que(cli);
 		pthread_create(&tid, NULL, &service_client, (void *)cli);
 
-		/* Reduce CPU usage */
+		// Reduce CPU usage
 		sleep(1);
 	}
 
