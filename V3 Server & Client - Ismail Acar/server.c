@@ -1,3 +1,11 @@
+/*
+The program is runable on a machine tha have gcc installed on it.
+
+To run the server side you need to open a new terminal and type: ./server 4444
+
+
+*/
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,7 +25,7 @@
 pthread_mutex_t clients_mutex = PTHREAD_MUTEX_INITIALIZER;
 static _Atomic unsigned int total_clients = 0;
 static int uid = 10;
-char name1[32];
+char global_name[32];
 
 client_t *clients[MAX_CLIENTS];
 
@@ -94,6 +102,7 @@ void client_remove_que(int uid)
 
 	pthread_mutex_unlock(&clients_mutex);
 }
+
 /* Send message to all clients except sender */
 void send_join_message(char *s, int uid)
 {
@@ -116,6 +125,7 @@ void send_join_message(char *s, int uid)
 
 	pthread_mutex_unlock(&clients_mutex);
 }
+
 void send_message(char *s, int uid)
 { // buraya eklenecek arg
 	pthread_mutex_lock(&clients_mutex);
@@ -137,6 +147,7 @@ void send_message(char *s, int uid)
 
 	pthread_mutex_unlock(&clients_mutex);
 }
+
 int find_Client(char *s)
 {
 	char output[32];
@@ -144,7 +155,7 @@ int find_Client(char *s)
 	sprintf(format, FORMAT, "%s");
 	sscanf(s, format, output);
 
-	strcpy(name1, output);
+	strcpy(global_name, output);
 	for (int i = 0; i < MAX_CLIENTS; ++i)
 	{
 		if (clients[i])
@@ -229,7 +240,7 @@ void *service_client(void *arg)
 					char result[3000]; // 3000 özel bi sayı değil rastgele verildi.
 					sprintf(result, "%s %s\n", cli->name, buff_out);
 					send_message(result, a);
-					int result2 = write_to_file(name1, result);
+					int result2 = write_to_file(global_name, result);
 					if (result2 == 0)
 					{
 						printf("Data successfully written to file.\n");
