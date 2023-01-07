@@ -6,8 +6,13 @@ Group 10:
 1810205053 - Ismail Acar
 */
 
+/*
+compile:
+	gcc -Wall -g3 -fsanitize=address -pthread server.c -o server
+*/
+
 // The program is runable on a machine tha have gcc installed on it.
-// To run the server side you need to open a new terminal and type: ./server
+// To run the server side from the terminal you need to type: ./server after compile the file
 
 #include <stdio.h>
 #include <stdlib.h>

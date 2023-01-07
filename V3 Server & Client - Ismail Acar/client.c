@@ -6,7 +6,13 @@ Group 10:
 1810205053 - Ismail Acar
 */
 
-// To run a new client you need to open a new terminal and type: ./client
+/*
+compile:
+  gcc -Wall -g3 -fsanitize=address -pthread client.c -o client
+*/
+
+// The program is runable on a machine tha have gcc installed on it.
+// To open a new client from the terminal you need to type: ./client after compile the file
 
 #include <stdio.h>
 #include <stdlib.h>
