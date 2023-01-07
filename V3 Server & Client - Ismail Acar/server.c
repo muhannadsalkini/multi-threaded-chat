@@ -26,9 +26,9 @@ compile:
 #include <sys/types.h>
 #include <signal.h>
 
-#define FORMAT "-> %s hello"
-#define MAX_CLIENTS 20
-#define BUFFER_SIZE 1024
+#define FORMAT "-> %s hello" //.
+#define MAX_CLIENTS 20		 //.
+#define BUFFER_SIZE 1024	 //.
 
 static _Atomic unsigned int total_clients = 0; // total_clients is an atomic variable that can be modified concurrently
 static int uid = 10;						   // uid is a global variable that stores the next available client ID
@@ -132,6 +132,7 @@ void CONN_print_clients_list(struct sockaddr_in *head)
 	}
 	printf("\n");
 }
+
 // MESG_send_message sends a message to the specified client
 void MESG_send_message(char *s, int uid)
 {
@@ -171,7 +172,6 @@ void MERR_send_message_without_error(char *s, int uid)
 			}
 		}
 	}
-
 	pthread_mutex_unlock(&clients_mutex);
 }
 
@@ -192,7 +192,6 @@ void GONE_client_remove_que(int uid)
 			}
 		}
 	}
-
 	pthread_mutex_unlock(&clients_mutex);
 }
 
