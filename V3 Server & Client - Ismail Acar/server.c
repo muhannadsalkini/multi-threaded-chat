@@ -121,16 +121,17 @@ void CONN_send_join_message(char *s, int uid)
 }
 
 // CONN_print_clients_list prints the list of active clients
-void CONN_print_clients_list(struct sockaddr_in *head)
+void CONN_print_clients_list(client_t *cl, char *s)
 {
 	// CONN
-	int i = 0;
-	while (head != NULL)
+	for (int i = 0; i < MAX_CLIENTS; ++i)
 	{
-		printf("%d => %d ", i, head->data);
-		head = head->next;
+		if (write(clients[i]->sockfd, s, strlen(s)) < 0)
+		{
+			// perror("ERROR: write to descriptor failed");
+			break;
+		}
 	}
-	printf("\n");
 }
 
 // MESG_send_message sends a message to the specified client
@@ -293,7 +294,7 @@ void *service_client(void *arg)
 					}
 					else
 					{
-						printf("Error writing to file.\n");
+						// printf("Error writing to file.\n");
 					}
 
 					str_trim_lf(buff_out, strlen(buff_out));
