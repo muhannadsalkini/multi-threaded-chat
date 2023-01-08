@@ -57,32 +57,19 @@ void str_trim_lf(char *arr, int length)
 }
 
 // Converts a string to its binary ASCII representation
-void convert_to_asci(char *str, int length)
+void convert_to_asci(char *str, int length, char **argv, int argc)
 {
   // Check for proper usage
   if (argc != 2)
   {
-    fprintf(stderr, "Usage: %s <string>\n", argv[0]);
-    return 1;
+    printf("Usage: %s <string>\n", argv[0]);
   }
 
   // Get input string
   // char *str = argv[1];
 
   // Create array of strings to store binary ASCII representation
-  char binary[strlen(str)][MAX_BINARY_LEN];
 
-  // Convert string to binary ASCII representation
-  for (int i = 0; i < strlen(str); i++)
-  {
-    char c = str[i];
-    int idx = 0;
-    for (int j = 7; j >= 0; j--)
-    {
-      binary[i][idx++] = (c >> j) & 1 ? '1' : '0';
-    }
-    binary[i][idx] = '\0';
-  }
 
   // Print binary ASCII representation with '|' separator
   // for (int i = 0; i < strlen(str); i++)
@@ -91,17 +78,15 @@ void convert_to_asci(char *str, int length)
   //}
 
   // return binary;
-  return 0;
 }
 
 // Applies parity check to an array of binary strings
-void parity_check(char *binary_strings, num_strings)
+void parity_check(char *binary_strings, int num_strings, int argc, char **argv)
 {
   // Check for proper usage
-  if (argc < 2)
+  if (num_strings < 2)
   {
-    fprintf(stderr, "Usage: %s <binary strings>\n", argv[0]);
-    return 1;
+    printf("Usage: %s <binary strings>\n", argv[0]);
   }
 
   // Parse input binary strings
@@ -109,19 +94,19 @@ void parity_check(char *binary_strings, num_strings)
   // char *binary_strings[num_strings];
   for (int i = 0; i < num_strings; i++)
   {
-    binary_strings[i] = argv[i + 1];
+    //binary_strings[i] = argv[i + 1];
   }
 
   // Apply parity check to each binary string
   for (int i = 0; i < num_strings; i++)
   {
-    int num_ones = 0;
-    for (int j = 0; j < strlen(binary_strings[i]); j++)
+    //int num_ones = 0;
+    for (int j = 0; j < 10; j++)
     {
-      if (binary_strings[i][j] == '1')
-      {
-        num_ones++;
-      }
+    //  if (binary_strings[i][j] == '1')
+    //  {
+    //    num_ones++;
+    //  }
     }
 
     // if (num_ones % 2 == 0)
@@ -133,26 +118,21 @@ void parity_check(char *binary_strings, num_strings)
     //   printf("%s has odd parity\n", binary_strings[i]);
     // }
   }
-
-  return 0;
 }
 
 // Applies cyclic redundancy check to an array of binary strings
-void cyclic_redundancy_check(char *binary_strings, num_strings)
+void cyclic_redundancy_check(char *binary_strings, int num_strings, char **argv, int argc)
 {
   // Check for proper usage
   if (argc < 2)
   {
-    fprintf(stderr, "Usage: %s <binary strings>\n", argv[0]);
-    return 1;
+    printf("Usage: %s <binary strings>\n", argv[0]);
   }
 
   // Parse input binary strings
-  int num_strings = argc - 1;
-  char *binary_strings[num_strings];
   for (int i = 0; i < num_strings; i++)
   {
-    binary_strings[i] = argv[i + 1];
+    //binary_strings[i] = argv[i + 1];
   }
 
   // Apply cyclic redundancy check to each binary string
@@ -162,7 +142,7 @@ void cyclic_redundancy_check(char *binary_strings, num_strings)
     strcpy(crc, "0000000000000000"); // Initialize the CRC to all zeros
 
     // Calculate the CRC
-    for (int j = 0; j < strlen(binary_strings[i]); j++)
+    for (int j = 0; j < 10; j++)
     {
       // Shift the CRC left by 1 bit
       for (int k = POLYNOMIAL_LEN - 1; k > 0; k--)
@@ -175,19 +155,17 @@ void cyclic_redundancy_check(char *binary_strings, num_strings)
       {
         for (int k = 0; k < POLYNOMIAL_LEN; k++)
         {
-          crc[k] = crc[k] == polynomial[k] ? '0' : '1';
+          //crc[k] = crc[k] == polynomial[k] ? '0' : '1';
         }
       }
 
       // Shift the input string left by 1 bit
-      binary_strings[i][j] = binary_strings[i][j + 1];
+      //binary_strings[i][j] = binary_strings[i][j + 1];
     }
 
     // Print the calculated CRC
     // printf("CRC for %s is %s\n", binary_strings[i], crc);
   }
-
-  return 0;
 }
 
 // Function to catch the SIGINT signal (ctrl-c) and set the control_bit variable to 1
