@@ -70,7 +70,6 @@ void convert_to_asci(char *str, int length, char **argv, int argc)
 
   // Create array of strings to store binary ASCII representation
 
-
   // Print binary ASCII representation with '|' separator
   // for (int i = 0; i < strlen(str); i++)
   //{
@@ -94,19 +93,19 @@ void parity_check(char *binary_strings, int num_strings, int argc, char **argv)
   // char *binary_strings[num_strings];
   for (int i = 0; i < num_strings; i++)
   {
-    //binary_strings[i] = argv[i + 1];
+    // binary_strings[i] = argv[i + 1];
   }
 
   // Apply parity check to each binary string
   for (int i = 0; i < num_strings; i++)
   {
-    //int num_ones = 0;
+    // int num_ones = 0;
     for (int j = 0; j < 10; j++)
     {
-    //  if (binary_strings[i][j] == '1')
-    //  {
-    //    num_ones++;
-    //  }
+      //  if (binary_strings[i][j] == '1')
+      //  {
+      //    num_ones++;
+      //  }
     }
 
     // if (num_ones % 2 == 0)
@@ -132,7 +131,7 @@ void cyclic_redundancy_check(char *binary_strings, int num_strings, char **argv,
   // Parse input binary strings
   for (int i = 0; i < num_strings; i++)
   {
-    //binary_strings[i] = argv[i + 1];
+    // binary_strings[i] = argv[i + 1];
   }
 
   // Apply cyclic redundancy check to each binary string
@@ -155,12 +154,12 @@ void cyclic_redundancy_check(char *binary_strings, int num_strings, char **argv,
       {
         for (int k = 0; k < POLYNOMIAL_LEN; k++)
         {
-          //crc[k] = crc[k] == polynomial[k] ? '0' : '1';
+          // crc[k] = crc[k] == polynomial[k] ? '0' : '1';
         }
       }
 
       // Shift the input string left by 1 bit
-      //binary_strings[i][j] = binary_strings[i][j + 1];
+      // binary_strings[i][j] = binary_strings[i][j + 1];
     }
 
     // Print the calculated CRC
@@ -221,7 +220,7 @@ void send_msg()
       }
       else
       {
-        printf("Error writing to file.\n");
+        // printf("Error writing to file.\n");
       }
 
       // add the message to the buffer along with additional information and send it to the server
